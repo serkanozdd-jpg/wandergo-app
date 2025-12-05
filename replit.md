@@ -106,6 +106,31 @@ Preferred communication style: Simple, everyday language.
 - React Native Gesture Handler for smooth interactions
 - Safe Area Context for notch/status bar handling
 
+### Offline Mode
+
+**Implementation**:
+- **Network Detection**: Uses expo-network for connectivity monitoring with polling
+- **Data Caching**: AsyncStorage-based caching with TTL (time-to-live) expiration
+- **Offline Queue**: Pending actions queued for sync when back online
+
+**Cached Data Types**:
+- Places (all, individual, popular, nearby)
+- Routes and Itineraries
+- Favorites and Visited Places
+- Achievements
+
+**Key Files**:
+- `client/lib/offline-storage.ts`: Core caching and network monitoring
+- `client/lib/offline-api.ts`: Offline-aware API wrappers
+- `client/hooks/useOffline.ts`: Hook for network status
+- `client/components/OfflineIndicator.tsx`: Visual indicators (banner, badge)
+
+**User Experience**:
+- OfflineBadge shows when viewing cached data
+- OfflineIndicator banner when network is disconnected
+- Destructive actions (delete, create) blocked when offline with helpful alerts
+- Cached data served seamlessly with 7-day TTL for places/routes
+
 ### Deployment Configuration
 
 **Environment**:

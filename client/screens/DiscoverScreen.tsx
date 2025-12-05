@@ -19,10 +19,16 @@ import { ThemedView } from "@/components/ThemedView";
 import { PlaceCard } from "@/components/PlaceCard";
 import { CategoryChip } from "@/components/CategoryChip";
 import { HeaderTitle } from "@/components/HeaderTitle";
+import { OfflineBadge } from "@/components/OfflineIndicator";
 import { useTheme } from "@/hooks/useTheme";
+import { useOffline } from "@/hooks/useOffline";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { getPlaces, getNearbyPlaces, getPopularPlaces } from "@/lib/api";
+import {
+  getPlacesWithOffline,
+  getNearbyPlacesWithOffline,
+  getPopularPlacesWithOffline,
+} from "@/lib/offline-api";
 
 type Place = {
   id: string;
@@ -52,6 +58,7 @@ export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useTheme();
+  const { isOnline } = useOffline();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -60,6 +67,7 @@ export default function DiscoverScreen() {
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isOfflineData, setIsOfflineData] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
 
@@ -84,15 +92,16 @@ export default function DiscoverScreen() {
   const fetchData = useCallback(async (coords?: { lat: number; lng: number } | null) => {
     try {
       const [popularData, allData] = await Promise.all([
-        getPopularPlaces(10),
-        getPlaces({ limit: 50 }),
+        getPopularPlacesWithOffline(10),
+        getPlacesWithOffline({ limit: 50 }),
       ]);
       
       setPopularPlaces(popularData);
       setAllPlaces(allData);
+      setIsOfflineData(!isOnline);
 
       if (coords) {
-        const nearbyData = await getNearbyPlaces(coords.lat, coords.lng, 20, 10);
+        const nearbyData = await getNearbyPlacesWithOffline(coords.lat, coords.lng, 20, 10);
         setNearbyPlaces(nearbyData);
       }
     } catch (error) {
@@ -101,7 +110,7 @@ export default function DiscoverScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [isOnline]);
 
   useEffect(() => {
     const init = async () => {
@@ -134,6 +143,7 @@ export default function DiscoverScreen() {
     <View style={styles.headerContainer}>
       <View style={styles.titleRow}>
         <HeaderTitle title="WanderGo" />
+        {isOfflineData ? <OfflineBadge /> : null}
       </View>
 
       <View

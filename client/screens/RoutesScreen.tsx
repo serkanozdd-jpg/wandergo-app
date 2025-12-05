@@ -15,10 +15,13 @@ import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Card } from "@/components/Card";
+import { OfflineBadge } from "@/components/OfflineIndicator";
 import { useTheme } from "@/hooks/useTheme";
+import { useOffline } from "@/hooks/useOffline";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { getRoutes, deleteRoute } from "@/lib/api";
+import { getRoutesWithOffline } from "@/lib/offline-api";
+import { deleteRoute } from "@/lib/api";
 
 type Route = {
   id: string;
@@ -49,22 +52,25 @@ export default function RoutesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useTheme();
+  const { isOnline } = useOffline();
 
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isOfflineData, setIsOfflineData] = useState(false);
 
   const fetchRoutes = useCallback(async () => {
     try {
-      const data = await getRoutes();
-      setRoutes(data);
+      const data = await getRoutesWithOffline();
+      setRoutes(data as Route[]);
+      setIsOfflineData(!isOnline);
     } catch (error) {
       console.error("Fetch routes error:", error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [isOnline]);
 
   useEffect(() => {
     fetchRoutes();
@@ -76,6 +82,14 @@ export default function RoutesScreen() {
   };
 
   const handleDeleteRoute = (routeId: string) => {
+    if (!isOnline) {
+      Alert.alert(
+        "Offline",
+        "You need to be online to delete routes. Please connect to the internet and try again."
+      );
+      return;
+    }
+
     Alert.alert(
       "Delete Route",
       "Are you sure you want to delete this route?",
@@ -215,13 +229,17 @@ export default function RoutesScreen() {
         ListHeaderComponent={
           <>
             <View style={styles.header}>
-              <ThemedText type="h2">My Routes</ThemedText>
+              <View style={styles.headerTitle}>
+                <ThemedText type="h2">My Routes</ThemedText>
+                {isOfflineData ? <OfflineBadge /> : null}
+              </View>
               <Pressable
                 style={({ pressed }) => [
                   styles.addButton,
                   { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 },
                 ]}
                 onPress={handleCreateRoute}
+                disabled={!isOnline}
               >
                 <Feather name="plus" size={20} color="#FFFFFF" />
               </Pressable>
@@ -307,6 +325,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.xl,
+  },
+  headerTitle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
   },
   addButton: {
     width: 40,

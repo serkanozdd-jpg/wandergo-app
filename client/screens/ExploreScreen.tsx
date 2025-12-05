@@ -15,10 +15,12 @@ import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { PlaceCard } from "@/components/PlaceCard";
+import { OfflineBadge } from "@/components/OfflineIndicator";
 import { useTheme } from "@/hooks/useTheme";
+import { useOffline } from "@/hooks/useOffline";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { getPlaces } from "@/lib/api";
+import { getPlacesWithOffline } from "@/lib/offline-api";
 
 type Place = {
   id: string;
@@ -38,10 +40,12 @@ export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useTheme();
+  const { isOnline } = useOffline();
 
   const [places, setPlaces] = useState<Place[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOfflineData, setIsOfflineData] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
 
@@ -58,8 +62,9 @@ export default function ExploreScreen() {
           setLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
         }
 
-        const data = await getPlaces({ limit: 50 });
+        const data = await getPlacesWithOffline({ limit: 50 });
         setPlaces(data);
+        setIsOfflineData(!isOnline);
       } catch (error) {
         console.error("Init error:", error);
       } finally {
@@ -67,7 +72,7 @@ export default function ExploreScreen() {
       }
     };
     init();
-  }, []);
+  }, [isOnline]);
 
   const handlePlaceSelect = (place: Place) => {
     setSelectedPlace(place);
@@ -117,9 +122,12 @@ export default function ExploreScreen() {
             </View>
           ) : null}
 
-          <ThemedText type="h4" style={styles.placesTitle}>
-            {places.length} Places Available
-          </ThemedText>
+          <View style={styles.placesHeader}>
+            <ThemedText type="h4" style={styles.placesTitle}>
+              {places.length} Places Available
+            </ThemedText>
+            {isOfflineData ? <OfflineBadge /> : null}
+          </View>
 
           <View style={styles.placesList}>
             {places.slice(0, 5).map((place) => (
@@ -222,8 +230,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing.xl,
   },
-  placesTitle: {
+  placesHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
     marginBottom: Spacing.md,
+  },
+  placesTitle: {
   },
   placesList: {
     width: "100%",

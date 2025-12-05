@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Dimensions,
   Platform,
+  Alert,
 } from "react-native";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,9 +17,12 @@ import { Feather } from "@expo/vector-icons";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { Card } from "@/components/Card";
+import { OfflineBadge } from "@/components/OfflineIndicator";
 import { useTheme } from "@/hooks/useTheme";
+import { useOffline } from "@/hooks/useOffline";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { getAchievements, checkAchievements, getVisitedPlaces } from "@/lib/api";
+import { checkAchievements } from "@/lib/api";
+import { getAchievementsWithOffline, getVisitedWithOffline } from "@/lib/offline-api";
 
 type Achievement = {
   id: string;
@@ -65,6 +69,7 @@ export default function AchievementsScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const { isOnline } = useOffline();
   const mapRef = useRef<MapView>(null);
 
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -72,22 +77,24 @@ export default function AchievementsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [isOfflineData, setIsOfflineData] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       const [achievementsData, visitedData] = await Promise.all([
-        getAchievements(),
-        getVisitedPlaces(),
+        getAchievementsWithOffline(),
+        getVisitedWithOffline(),
       ]);
-      setAchievements(achievementsData);
-      setVisitedPlaces(visitedData);
+      setAchievements(achievementsData as Achievement[]);
+      setVisitedPlaces(visitedData as VisitedPlace[]);
+      setIsOfflineData(!isOnline);
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [isOnline]);
 
   useEffect(() => {
     fetchData();
@@ -123,6 +130,14 @@ export default function AchievementsScreen() {
   };
 
   const handleCheckAchievements = async () => {
+    if (!isOnline) {
+      Alert.alert(
+        "Offline",
+        "You need to be online to check for new achievements. Please connect to the internet and try again."
+      );
+      return;
+    }
+
     setIsChecking(true);
     try {
       const newAchievements = await checkAchievements();
@@ -368,7 +383,10 @@ export default function AchievementsScreen() {
           <>
             <View style={styles.header}>
               <View>
-                <ThemedText type="h2">Achievements</ThemedText>
+                <View style={styles.headerTitle}>
+                  <ThemedText type="h2">Achievements</ThemedText>
+                  {isOfflineData ? <OfflineBadge /> : null}
+                </View>
                 <ThemedText
                   type="body"
                   style={{ color: theme.textSecondary, marginTop: Spacing.xs }}
@@ -379,10 +397,10 @@ export default function AchievementsScreen() {
               <Pressable
                 style={[
                   styles.checkButton,
-                  { backgroundColor: theme.primary, opacity: isChecking ? 0.7 : 1 },
+                  { backgroundColor: theme.primary, opacity: isChecking || !isOnline ? 0.5 : 1 },
                 ]}
                 onPress={handleCheckAchievements}
-                disabled={isChecking}
+                disabled={isChecking || !isOnline}
               >
                 {isChecking ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
@@ -447,6 +465,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.xl,
+  },
+  headerTitle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
   },
   checkButton: {
     width: 44,
