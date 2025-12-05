@@ -1,0 +1,189 @@
+UYGULAMA ADI: WanderGo – Akıllı Seyahat ve Keşif Asistanı
+
+WanderGo; seyahat etmeyi sevenler, dünyanın farklı köşelerini keşfetmek isteyenler ve gezilerini daha verimli planlamak isteyen kullanıcılar için tasarlanmış akıllı bir mobil uygulamadır. Uygulama; kullanıcının konumuna, oteline veya belirlediği başlangıç noktasına göre otomatik rota oluşturur, gezilecek yerleri önerir, bu yerlerle ilgili kısa bilgi makaleleri sunar ve kullanıcıların yorum/puan bırakarak katkı sağlamasını mümkün kılar. Tamamen kişiselleştirilmiş gezi planlaması sağlar.
+
+1. TEMEL UYGULAMA ÖZETİ
+
+WanderGo, bulunduğun şehirde veya gitmek istediğin destinasyonda;
+
+Gezilecek yerleri listeleyen,
+
+Bu yerlere göre yürüyüş/koşu/toplu taşıma/araç rotası oluşturan,
+
+Her yer için yapay zekâ destekli kısa makaleler hazırlayan,
+
+Topluluktan yorum ve puan alan,
+
+Kullanıcıların kendi deneyimlerini ekleyebildiği,
+
+Yapay zekâ ile kişiye özel günlük rota planı çıkaran
+akıllı bir seyahat uygulamasıdır.
+
+Uygulama, hem pratik hem sosyal hem bilgi odaklıdır.
+
+2. UYGULAMANIN ANA ÖZELLİKLERİ
+A. Konum Tabanlı Rota Oluşturma
+
+Telefon GPS'inden veya kullanıcı tarafından yazılan konumdan rota oluşturur.
+
+4 farklı rota tipi: Yürüyüş, Koşu, Araç, Toplu Taşıma.
+
+Rota üzerinde önerilen durakları gösterir.
+
+“Günlük rota planı” özelliği ile kullanıcının vaktine göre otomatik gezi listesi çıkarır.
+
+B. Gezilecek Yer Veritabanı
+
+Şehir/ülke bazlı listeleme.
+
+Popüler yerler + gizli kalmış noktalar.
+
+Her yer için:
+
+Kısa açıklama (AI oluşturur)
+
+Konum
+
+Giriş ücreti bilgisi
+
+Ziyaret süresi önerisi
+
+Fotoğraf
+
+Kullanıcı yorumları
+
+C. Yapay Zekâ Destekli Mini Makaleler
+
+Her lokasyonun:
+
+Geçmişi
+
+Kültürel önemi
+
+İlginç bilgileri
+
+Ziyaret tüyoları (en kalabalık saat, gün batımı, fotoğraf noktası vb.)
+otomatik olarak oluşturulur.
+
+D. Kullanıcı Yorum & Puanlama
+
+1–5 yıldız arası puanlama.
+
+Fotoğraflı yorum ekleme.
+
+Popülerlik sıralaması.
+
+“Gezginlerin favorileri” bölümü.
+
+E. Kişisel Profil
+
+Gidilen ülkeler/şehirler haritası
+
+Ziyaret edilen yer sayısı
+
+Rozet sistemi (ör: “Avrupa Kaşifi”, “Doğa Tutkunu”, “Şehir Avcısı”)
+
+Yorum geçmişi
+
+F. Sosyal Etkileşim
+
+Kullanıcıları takip etme
+
+Beğenilen rotaları kaydetme
+
+Kendi gezin için özel rota paylaşma
+
+3. GELİŞTİRİCİ İÇİN TEKNİK GEREKSİNİMLER
+Frontend
+
+Flutter (önerilen) veya React Native
+
+Google Maps / Mapbox SDK
+
+Responsive UI
+
+Temiz ve modern tasarım (material design)
+
+Backend
+
+Node.js veya Python (FastAPI önerilir)
+
+Kullanıcı sistemi (JWT Auth)
+
+Rota hesaplama için harita API entegrasyonu
+
+Yapay zekâ makale üretimi için OpenAI entegrasyonu
+
+Yorum/puan sistemi
+
+Fotoğraf yükleme için cloud depolama (Firebase Storage, Supabase vb.)
+
+Veritabanı
+
+PostgreSQL veya Firebase
+
+Tablolar:
+
+users
+
+places
+
+routes
+
+reviews
+
+favorites
+
+visited_places
+
+API Modülleri
+
+/auth
+
+/places
+
+/routes
+
+/reviews
+
+/user/profile
+
+/ai/articles
+
+4. KULLANICI AKIŞI
+
+Kullanıcı uygulamayı açar → konum izni ister.
+
+Uygulama yakındaki turistik noktaları listeler.
+
+Kullanıcı bir yer seçer → kısa makale + foto + yorumlar gösterilir.
+
+Kullanıcı “Rota Oluştur”a basar.
+
+Yürüyüş/araç/toplu taşıma seçer → rota çıkartılır.
+
+Kullanıcı isterse yoruma katkı sağlar.
+
+Gezdiği yerler profil haritasına işlenir.
+
+5. UYGULAMAYA EKLENEN “ÇEKİCİ PREMIUM ÖZELLİKLER”
+
+Offline mod (internet yokken bile rota ve bilgiler çalışır.)
+
+Yapay zekâ ile “Günlük Gezi Planı”
+
+Bölgeye göre en iyi yemek önerileri
+
+Fotoğraf düzenleme filtresi (travel-style)
+
+Sesli rehber (AI tarafından otomatik bir anlatım)
+
+Güvenlik modu: Gece yürüyüşleri için güvenli rota haritası
+
+6. REPLIT İÇİN KISA PROJE AÇIKLAMASI (YAPIŞTIRILACAK METİN)
+
+Aşağıdaki metin Replit’in yapay zekâsına doğrudan yapıştırılmaya hazır şekilde optimize edilmiştir:
+
+REPLIT İÇİN HAZIR TEK PARÇA PROJE İSTEĞİ
+
+"Bir mobil uygulama geliştirmek istiyorum. Uygulamanın adı WanderGo olacak. WanderGo; seyahat edenlere, gezmeyi sevenlere ve farklı şehirleri keşfetmek isteyenlere yönelik bir akıllı seyahat uygulamasıdır. Uygulama kullanıcı konumuna, oteline veya belirlediği başlangıç noktasına göre yürüyüş/araç/toplu taşıma rotası oluşturmalıdır. Ayrıca şehirdeki gezilecek yerleri listelemeli, bu yerler hakkında kısa bilgi makaleleri üretmeli ve kullanıcıların yorum/puan bırakmasına izin vermelidir. Kullanıcılar gittikleri yerleri işaretleyebilmelidir. Yapay zekâ, her lokasyon için mini açıklama/makale oluşturmalıdır. Kullanıcı profil sistemi, ziyaret edilen yer haritası, favoriler listesi ve yorum geçmişi olmalıdır. Backend Node.js veya Python olabilir, veritabanı olarak PostgreSQL kullanılabilir. Google Maps veya Mapbox SDK kullanılmalıdır. Modern, temiz, mobil uyumlu bir arayüz istiyorum. Bana bu uygulamanın tüm temel dosyalarını, backend API yapısını, frontend ekranlarını, gerekli veri modellerini ve çalışır bir proje yapısını oluştur."
