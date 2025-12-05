@@ -1,29 +1,42 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "WanderGo",
+    "slug": "wandergo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "wandergo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wandergo.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "WanderGo needs your location to show nearby places and create routes for you.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "WanderGo needs your location to show nearby places and create routes for you.",
+        "NSCameraUsageDescription": "WanderGo needs camera access to take photos for your reviews.",
+        "NSPhotoLibraryUsageDescription": "WanderGo needs photo library access to add photos to your reviews."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#00B4A0",
+        "foregroundImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.wandergo.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       [
@@ -32,13 +45,31 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#00B4A0",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#1A1D1F"
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "WanderGo needs your location to show nearby places and create routes for you."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "WanderGo needs camera access to take photos for your reviews."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "WanderGo needs photo library access to add photos to your reviews."
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true
