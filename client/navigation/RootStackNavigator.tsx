@@ -7,6 +7,7 @@ import CreateReviewScreen from "@/screens/CreateReviewScreen";
 import CreateRouteScreen from "@/screens/CreateRouteScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import ItineraryPlannerScreen from "@/screens/ItineraryPlannerScreen";
+import AchievementsScreen from "@/screens/AchievementsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useAuth } from "@/lib/auth";
 import { ActivityIndicator, View } from "react-native";
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   CreateRoute: { selectedPlaceIds?: string[] };
   Settings: undefined;
   ItineraryPlanner: undefined;
+  Achievements: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -88,6 +90,13 @@ export default function RootStackNavigator() {
             component={ItineraryPlannerScreen}
             options={{
               headerTitle: "Trip Planner",
+            }}
+          />
+          <Stack.Screen
+            name="Achievements"
+            component={AchievementsScreen}
+            options={{
+              headerTitle: "Achievements",
             }}
           />
         </>

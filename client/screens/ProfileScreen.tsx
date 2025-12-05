@@ -215,6 +215,34 @@ export default function ProfileScreen() {
           </Card>
         </View>
 
+        <Pressable
+          style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+          onPress={() => navigation.navigate("Achievements")}
+        >
+          <Card elevation={1} style={styles.achievementsCard}>
+            <View style={styles.achievementsContent}>
+              <View
+                style={[
+                  styles.achievementsBadge,
+                  { backgroundColor: theme.accent + "20" },
+                ]}
+              >
+                <Feather name="award" size={24} color={theme.accent} />
+              </View>
+              <View style={styles.achievementsInfo}>
+                <ThemedText type="h4">Achievements & Badges</ThemedText>
+                <ThemedText
+                  type="caption"
+                  style={{ color: theme.textSecondary }}
+                >
+                  Track your travel milestones
+                </ThemedText>
+              </View>
+            </View>
+            <Feather name="chevron-right" size={24} color={theme.textSecondary} />
+          </Card>
+        </Pressable>
+
         {recentReviews.length > 0 ? (
           <View style={styles.section}>
             <ThemedText type="h3" style={styles.sectionTitle}>
@@ -298,7 +326,27 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: "row",
     gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  achievementsCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: Spacing.xl,
+  },
+  achievementsContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  achievementsBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  achievementsInfo: {
+    marginLeft: Spacing.md,
   },
   statCard: {
     flex: 1,
