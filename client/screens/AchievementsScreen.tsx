@@ -10,7 +10,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
+import { MapView, Marker } from "expo-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -70,7 +70,7 @@ export default function AchievementsScreen() {
   const navigation = useNavigation();
   const { theme } = useTheme();
   const { isOnline } = useOffline();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<MapView | null>(null);
 
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [visitedPlaces, setVisitedPlaces] = useState<VisitedPlace[]>([]);
@@ -226,15 +226,14 @@ export default function AchievementsScreen() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          provider={PROVIDER_DEFAULT}
-          initialRegion={{
-            latitude: 20,
-            longitude: 0,
-            latitudeDelta: 100,
-            longitudeDelta: 100,
+          initialCameraPosition={{
+            center: {
+              latitude: 20,
+              longitude: 0,
+            },
+            zoom: 1,
           }}
           mapType="standard"
-          showsUserLocation={false}
           showsCompass={false}
           rotateEnabled={false}
           pitchEnabled={false}
@@ -247,8 +246,8 @@ export default function AchievementsScreen() {
                 longitude: visited.place.longitude,
               }}
               title={visited.place.name}
-              description={`${visited.place.city}, ${visited.place.country}`}
-              pinColor={theme.primary}
+              snippet={`${visited.place.city}, ${visited.place.country}`}
+              color={theme.primary}
             />
           ))}
         </MapView>
