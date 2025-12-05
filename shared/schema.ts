@@ -155,6 +155,77 @@ export const routesRelations = relations(routes, ({ one }) => ({
   }),
 }));
 
+export const itineraries = pgTable("itineraries", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  date: timestamp("date").notNull(),
+  city: text("city"),
+  country: text("country"),
+  placeIds: jsonb("place_ids").$type<string[]>().default([]),
+  routeType: text("route_type").default("walking"),
+  availableHours: integer("available_hours").default(8),
+  generatedSchedule: text("generated_schedule"),
+  isCompleted: boolean("is_completed").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const itinerariesRelations = relations(itineraries, ({ one }) => ({
+  user: one(users, {
+    fields: [itineraries.userId],
+    references: [users.id],
+  }),
+}));
+
+export const achievements = pgTable("achievements", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  icon: text("icon"),
+  earnedAt: timestamp("earned_at").defaultNow().notNull(),
+});
+
+export const achievementsRelations = relations(achievements, ({ one }) => ({
+  user: one(users, {
+    fields: [achievements.userId],
+    references: [users.id],
+  }),
+}));
+
+export const follows = pgTable("follows", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  followerId: varchar("follower_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  followingId: varchar("following_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const followsRelations = relations(follows, ({ one }) => ({
+  follower: one(users, {
+    fields: [follows.followerId],
+    references: [users.id],
+  }),
+  following: one(users, {
+    fields: [follows.followingId],
+    references: [users.id],
+  }),
+}));
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -190,6 +261,20 @@ export const insertRouteSchema = createInsertSchema(routes).omit({
   createdAt: true,
 });
 
+export const insertItinerarySchema = createInsertSchema(itineraries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAchievementSchema = createInsertSchema(achievements).omit({
+  id: true,
+});
+
+export const insertFollowSchema = createInsertSchema(follows).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertPlace = z.infer<typeof insertPlaceSchema>;
@@ -202,3 +287,9 @@ export type InsertVisitedPlace = z.infer<typeof insertVisitedPlaceSchema>;
 export type VisitedPlace = typeof visitedPlaces.$inferSelect;
 export type InsertRoute = z.infer<typeof insertRouteSchema>;
 export type Route = typeof routes.$inferSelect;
+export type InsertItinerary = z.infer<typeof insertItinerarySchema>;
+export type Itinerary = typeof itineraries.$inferSelect;
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertFollow = z.infer<typeof insertFollowSchema>;
+export type Follow = typeof follows.$inferSelect;

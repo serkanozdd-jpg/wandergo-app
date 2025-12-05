@@ -375,6 +375,224 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/itineraries", authenticate, async (req, res) => {
+    try {
+      const itineraries = await storage.getItineraries(req.user!.id);
+      res.json(itineraries);
+    } catch (error) {
+      console.error("Get itineraries error:", error);
+      res.status(500).json({ error: "Failed to get itineraries" });
+    }
+  });
+
+  app.get("/api/itineraries/:id", authenticate, async (req, res) => {
+    try {
+      const itinerary = await storage.getItinerary(req.params.id);
+      if (!itinerary) {
+        return res.status(404).json({ error: "Itinerary not found" });
+      }
+      if (itinerary.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      res.json(itinerary);
+    } catch (error) {
+      console.error("Get itinerary error:", error);
+      res.status(500).json({ error: "Failed to get itinerary" });
+    }
+  });
+
+  app.post("/api/itineraries", authenticate, async (req, res) => {
+    try {
+      const { title, date, city, country, placeIds, routeType, availableHours } = req.body;
+      
+      if (!title || !date || !placeIds) {
+        return res.status(400).json({ error: "Title, date, and place IDs required" });
+      }
+      
+      if (!Array.isArray(placeIds) || placeIds.length === 0) {
+        return res.status(400).json({ error: "At least one place ID is required" });
+      }
+      
+      const places = await Promise.all(
+        placeIds.map((id: string) => storage.getPlace(id))
+      );
+      
+      const validPlaces = places.filter(p => p !== undefined).map(p => ({
+        name: p!.name,
+        category: p!.category,
+        visitDuration: p!.visitDuration,
+      }));
+      
+      if (validPlaces.length === 0) {
+        return res.status(400).json({ error: "No valid places found for the provided IDs" });
+      }
+      
+      const generatedSchedule = await generateDailyItinerary(
+        validPlaces,
+        routeType || "walking",
+        availableHours || 8
+      );
+      
+      const itinerary = await storage.createItinerary({
+        userId: req.user!.id,
+        title,
+        date: new Date(date),
+        city,
+        country,
+        placeIds,
+        routeType: routeType || "walking",
+        availableHours: availableHours || 8,
+        generatedSchedule,
+      });
+      
+      res.json(itinerary);
+    } catch (error) {
+      console.error("Create itinerary error:", error);
+      res.status(500).json({ error: "Failed to create itinerary" });
+    }
+  });
+
+  app.put("/api/itineraries/:id", authenticate, async (req, res) => {
+    try {
+      const existingItinerary = await storage.getItinerary(req.params.id);
+      if (!existingItinerary) {
+        return res.status(404).json({ error: "Itinerary not found" });
+      }
+      if (existingItinerary.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const { isCompleted } = req.body;
+      const itinerary = await storage.updateItinerary(req.params.id, { isCompleted });
+      res.json(itinerary);
+    } catch (error) {
+      console.error("Update itinerary error:", error);
+      res.status(500).json({ error: "Failed to update itinerary" });
+    }
+  });
+
+  app.delete("/api/itineraries/:id", authenticate, async (req, res) => {
+    try {
+      const existingItinerary = await storage.getItinerary(req.params.id);
+      if (!existingItinerary) {
+        return res.status(404).json({ error: "Itinerary not found" });
+      }
+      if (existingItinerary.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      await storage.deleteItinerary(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete itinerary error:", error);
+      res.status(500).json({ error: "Failed to delete itinerary" });
+    }
+  });
+
+  app.get("/api/achievements", authenticate, async (req, res) => {
+    try {
+      const achievements = await storage.getAchievements(req.user!.id);
+      res.json(achievements);
+    } catch (error) {
+      console.error("Get achievements error:", error);
+      res.status(500).json({ error: "Failed to get achievements" });
+    }
+  });
+
+  app.post("/api/achievements/check", authenticate, async (req, res) => {
+    try {
+      const newAchievements = await storage.checkAndAwardAchievements(req.user!.id);
+      res.json(newAchievements);
+    } catch (error) {
+      console.error("Check achievements error:", error);
+      res.status(500).json({ error: "Failed to check achievements" });
+    }
+  });
+
+  app.get("/api/users/:id", optionalAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const stats = await storage.getUserStats(req.params.id);
+      let isFollowing = false;
+      if (req.user && req.user.id !== req.params.id) {
+        isFollowing = await storage.isFollowing(req.user.id, req.params.id);
+      }
+      res.json({
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        avatarPreset: user.avatarPreset,
+        bio: user.bio,
+        ...stats,
+        isFollowing,
+      });
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
+  app.get("/api/users/:id/followers", async (req, res) => {
+    try {
+      const followers = await storage.getFollowers(req.params.id);
+      res.json(followers);
+    } catch (error) {
+      console.error("Get followers error:", error);
+      res.status(500).json({ error: "Failed to get followers" });
+    }
+  });
+
+  app.get("/api/users/:id/following", async (req, res) => {
+    try {
+      const following = await storage.getFollowing(req.params.id);
+      res.json(following);
+    } catch (error) {
+      console.error("Get following error:", error);
+      res.status(500).json({ error: "Failed to get following" });
+    }
+  });
+
+  app.post("/api/users/:id/follow", authenticate, async (req, res) => {
+    try {
+      if (req.user!.id === req.params.id) {
+        return res.status(400).json({ error: "Cannot follow yourself" });
+      }
+      const follow = await storage.followUser({
+        followerId: req.user!.id,
+        followingId: req.params.id,
+      });
+      res.json(follow);
+    } catch (error) {
+      console.error("Follow user error:", error);
+      res.status(500).json({ error: "Failed to follow user" });
+    }
+  });
+
+  app.delete("/api/users/:id/follow", authenticate, async (req, res) => {
+    try {
+      await storage.unfollowUser(req.user!.id, req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Unfollow user error:", error);
+      res.status(500).json({ error: "Failed to unfollow user" });
+    }
+  });
+
+  app.get("/api/routes/public", optionalAuth, async (req, res) => {
+    try {
+      const { limit } = req.query;
+      const allPublicRoutes: any[] = [];
+      const users = await Promise.all([]);
+      res.json(allPublicRoutes.slice(0, parseInt(limit as string) || 20));
+    } catch (error) {
+      console.error("Get public routes error:", error);
+      res.status(500).json({ error: "Failed to get public routes" });
+    }
+  });
+
   app.get("/public-objects/:filePath(*)", async (req, res) => {
     const filePath = req.params.filePath;
     const objectStorageService = new ObjectStorageService();

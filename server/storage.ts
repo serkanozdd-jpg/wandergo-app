@@ -5,6 +5,9 @@ import {
   favorites,
   visitedPlaces,
   routes,
+  itineraries,
+  achievements,
+  follows,
   type User,
   type InsertUser,
   type Place,
@@ -17,6 +20,12 @@ import {
   type InsertVisitedPlace,
   type Route,
   type InsertRoute,
+  type Itinerary,
+  type InsertItinerary,
+  type Achievement,
+  type InsertAchievement,
+  type Follow,
+  type InsertFollow,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql, ilike, or } from "drizzle-orm";
@@ -53,6 +62,22 @@ export interface IStorage {
   getRoute(id: string): Promise<Route | undefined>;
   createRoute(route: InsertRoute): Promise<Route>;
   deleteRoute(id: string): Promise<boolean>;
+  
+  getItineraries(userId: string): Promise<Itinerary[]>;
+  getItinerary(id: string): Promise<Itinerary | undefined>;
+  createItinerary(itinerary: InsertItinerary): Promise<Itinerary>;
+  updateItinerary(id: string, data: Partial<InsertItinerary>): Promise<Itinerary | undefined>;
+  deleteItinerary(id: string): Promise<boolean>;
+  
+  getAchievements(userId: string): Promise<Achievement[]>;
+  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+  checkAndAwardAchievements(userId: string): Promise<Achievement[]>;
+  
+  getFollowers(userId: string): Promise<(Follow & { follower: User })[]>;
+  getFollowing(userId: string): Promise<(Follow & { following: User })[]>;
+  followUser(follow: InsertFollow): Promise<Follow>;
+  unfollowUser(followerId: string, followingId: string): Promise<boolean>;
+  isFollowing(followerId: string, followingId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -316,6 +341,140 @@ export class DatabaseStorage implements IStorage {
   async deleteRoute(id: string): Promise<boolean> {
     await db.delete(routes).where(eq(routes.id, id));
     return true;
+  }
+
+  async getItineraries(userId: string): Promise<Itinerary[]> {
+    const result = await db.select().from(itineraries)
+      .where(eq(itineraries.userId, userId))
+      .orderBy(desc(itineraries.date));
+    return result;
+  }
+
+  async getItinerary(id: string): Promise<Itinerary | undefined> {
+    const [itinerary] = await db.select().from(itineraries).where(eq(itineraries.id, id));
+    return itinerary || undefined;
+  }
+
+  async createItinerary(itinerary: InsertItinerary): Promise<Itinerary> {
+    const [newItinerary] = await db.insert(itineraries).values(itinerary).returning();
+    return newItinerary;
+  }
+
+  async updateItinerary(id: string, data: Partial<InsertItinerary>): Promise<Itinerary | undefined> {
+    const [itinerary] = await db.update(itineraries).set(data).where(eq(itineraries.id, id)).returning();
+    return itinerary || undefined;
+  }
+
+  async deleteItinerary(id: string): Promise<boolean> {
+    await db.delete(itineraries).where(eq(itineraries.id, id));
+    return true;
+  }
+
+  async getAchievements(userId: string): Promise<Achievement[]> {
+    const result = await db.select().from(achievements)
+      .where(eq(achievements.userId, userId))
+      .orderBy(desc(achievements.earnedAt));
+    return result;
+  }
+
+  async createAchievement(achievement: InsertAchievement): Promise<Achievement> {
+    const existing = await db.select().from(achievements)
+      .where(and(
+        eq(achievements.userId, achievement.userId),
+        eq(achievements.type, achievement.type)
+      ));
+    
+    if (existing.length > 0) {
+      return existing[0];
+    }
+    
+    const [newAchievement] = await db.insert(achievements).values(achievement).returning();
+    return newAchievement;
+  }
+
+  async checkAndAwardAchievements(userId: string): Promise<Achievement[]> {
+    const newAchievements: Achievement[] = [];
+    const stats = await this.getUserStats(userId);
+    const existingAchievements = await this.getAchievements(userId);
+    const existingTypes = new Set(existingAchievements.map(a => a.type));
+    
+    const achievementDefinitions = [
+      { type: "first_visit", title: "First Steps", description: "Visited your first place", icon: "map-pin", condition: () => stats.placesVisited >= 1 },
+      { type: "explorer_10", title: "Explorer", description: "Visited 10 places", icon: "compass", condition: () => stats.placesVisited >= 10 },
+      { type: "globetrotter_50", title: "Globetrotter", description: "Visited 50 places", icon: "globe", condition: () => stats.placesVisited >= 50 },
+      { type: "first_country", title: "Border Crosser", description: "Explored your first country", icon: "flag", condition: () => stats.countriesVisited >= 1 },
+      { type: "world_traveler_5", title: "World Traveler", description: "Visited 5 countries", icon: "map", condition: () => stats.countriesVisited >= 5 },
+      { type: "first_review", title: "Critic", description: "Wrote your first review", icon: "edit", condition: () => stats.reviewsCount >= 1 },
+      { type: "reviewer_10", title: "Storyteller", description: "Wrote 10 reviews", icon: "book-open", condition: () => stats.reviewsCount >= 10 },
+    ];
+    
+    for (const def of achievementDefinitions) {
+      if (!existingTypes.has(def.type) && def.condition()) {
+        const achievement = await this.createAchievement({
+          userId,
+          type: def.type,
+          title: def.title,
+          description: def.description,
+          icon: def.icon,
+        });
+        newAchievements.push(achievement);
+      }
+    }
+    
+    return newAchievements;
+  }
+
+  async getFollowers(userId: string): Promise<(Follow & { follower: User })[]> {
+    const result = await db.select({
+      follow: follows,
+      follower: users,
+    })
+    .from(follows)
+    .innerJoin(users, eq(follows.followerId, users.id))
+    .where(eq(follows.followingId, userId))
+    .orderBy(desc(follows.createdAt));
+    
+    return result.map(r => ({ ...r.follow, follower: r.follower }));
+  }
+
+  async getFollowing(userId: string): Promise<(Follow & { following: User })[]> {
+    const result = await db.select({
+      follow: follows,
+      following: users,
+    })
+    .from(follows)
+    .innerJoin(users, eq(follows.followingId, users.id))
+    .where(eq(follows.followerId, userId))
+    .orderBy(desc(follows.createdAt));
+    
+    return result.map(r => ({ ...r.follow, following: r.following }));
+  }
+
+  async followUser(follow: InsertFollow): Promise<Follow> {
+    const existing = await db.select().from(follows)
+      .where(and(
+        eq(follows.followerId, follow.followerId),
+        eq(follows.followingId, follow.followingId)
+      ));
+    
+    if (existing.length > 0) {
+      return existing[0];
+    }
+    
+    const [newFollow] = await db.insert(follows).values(follow).returning();
+    return newFollow;
+  }
+
+  async unfollowUser(followerId: string, followingId: string): Promise<boolean> {
+    await db.delete(follows)
+      .where(and(eq(follows.followerId, followerId), eq(follows.followingId, followingId)));
+    return true;
+  }
+
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const result = await db.select().from(follows)
+      .where(and(eq(follows.followerId, followerId), eq(follows.followingId, followingId)));
+    return result.length > 0;
   }
 }
 

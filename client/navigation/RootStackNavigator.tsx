@@ -6,6 +6,7 @@ import PlaceDetailScreen from "@/screens/PlaceDetailScreen";
 import CreateReviewScreen from "@/screens/CreateReviewScreen";
 import CreateRouteScreen from "@/screens/CreateRouteScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
+import ItineraryPlannerScreen from "@/screens/ItineraryPlannerScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useAuth } from "@/lib/auth";
 import { ActivityIndicator, View } from "react-native";
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   CreateReview: { placeId: string; placeName: string };
   CreateRoute: { selectedPlaceIds?: string[] };
   Settings: undefined;
+  ItineraryPlanner: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -79,6 +81,13 @@ export default function RootStackNavigator() {
             component={SettingsScreen}
             options={{
               headerTitle: "Settings",
+            }}
+          />
+          <Stack.Screen
+            name="ItineraryPlanner"
+            component={ItineraryPlannerScreen}
+            options={{
+              headerTitle: "Trip Planner",
             }}
           />
         </>

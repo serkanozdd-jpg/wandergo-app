@@ -205,3 +205,106 @@ export async function setPhotoAcl(photoURL: string) {
   if (!res.ok) throw new Error("Failed to set photo ACL");
   return res.json();
 }
+
+export async function getItineraries() {
+  const res = await authFetch("/api/itineraries");
+  if (!res.ok) throw new Error("Failed to fetch itineraries");
+  return res.json();
+}
+
+export async function getItinerary(id: string) {
+  const res = await authFetch(`/api/itineraries/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch itinerary");
+  return res.json();
+}
+
+export async function createItinerary(data: {
+  title: string;
+  date: string;
+  city?: string;
+  country?: string;
+  placeIds: string[];
+  routeType?: string;
+  availableHours?: number;
+}) {
+  const res = await authFetch("/api/itineraries", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to create itinerary");
+  return res.json();
+}
+
+export async function updateItinerary(id: string, data: { isCompleted?: boolean }) {
+  const res = await authFetch(`/api/itineraries/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to update itinerary");
+  return res.json();
+}
+
+export async function deleteItinerary(id: string) {
+  const res = await authFetch(`/api/itineraries/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete itinerary");
+  return res.json();
+}
+
+export async function getAchievements() {
+  const res = await authFetch("/api/achievements");
+  if (!res.ok) throw new Error("Failed to fetch achievements");
+  return res.json();
+}
+
+export async function checkAchievements() {
+  const res = await authFetch("/api/achievements/check", {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to check achievements");
+  return res.json();
+}
+
+export async function getUserProfile(userId: string) {
+  const res = await authFetch(`/api/users/${userId}`);
+  if (!res.ok) throw new Error("Failed to fetch user profile");
+  return res.json();
+}
+
+export async function getFollowers(userId: string) {
+  const res = await authFetch(`/api/users/${userId}/followers`);
+  if (!res.ok) throw new Error("Failed to fetch followers");
+  return res.json();
+}
+
+export async function getFollowing(userId: string) {
+  const res = await authFetch(`/api/users/${userId}/following`);
+  if (!res.ok) throw new Error("Failed to fetch following");
+  return res.json();
+}
+
+export async function followUser(userId: string) {
+  const res = await authFetch(`/api/users/${userId}/follow`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to follow user");
+  return res.json();
+}
+
+export async function unfollowUser(userId: string) {
+  const res = await authFetch(`/api/users/${userId}/follow`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to unfollow user");
+  return res.json();
+}
+
+export async function getPublicRoutes(limit?: number) {
+  const params = new URLSearchParams();
+  if (limit) params.append("limit", limit.toString());
+  
+  const res = await authFetch(`/api/routes/public?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch public routes");
+  return res.json();
+}

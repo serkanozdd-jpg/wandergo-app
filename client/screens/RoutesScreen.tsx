@@ -213,18 +213,40 @@ export default function RoutesScreen() {
           paddingHorizontal: Spacing.lg,
         }}
         ListHeaderComponent={
-          <View style={styles.header}>
-            <ThemedText type="h2">My Routes</ThemedText>
+          <>
+            <View style={styles.header}>
+              <ThemedText type="h2">My Routes</ThemedText>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.addButton,
+                  { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 },
+                ]}
+                onPress={handleCreateRoute}
+              >
+                <Feather name="plus" size={20} color="#FFFFFF" />
+              </Pressable>
+            </View>
             <Pressable
               style={({ pressed }) => [
-                styles.addButton,
-                { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 },
+                styles.aiPlannerCard,
+                { backgroundColor: theme.accent, opacity: pressed ? 0.9 : 1 },
               ]}
-              onPress={handleCreateRoute}
+              onPress={() => navigation.navigate("ItineraryPlanner")}
             >
-              <Feather name="plus" size={20} color="#FFFFFF" />
+              <View style={styles.aiPlannerContent}>
+                <Feather name="sparkles" size={24} color="#FFFFFF" />
+                <View style={styles.aiPlannerText}>
+                  <ThemedText type="label" style={{ color: "#FFFFFF" }}>
+                    AI Trip Planner
+                  </ThemedText>
+                  <ThemedText type="caption" style={{ color: "rgba(255,255,255,0.8)" }}>
+                    Generate personalized daily itineraries
+                  </ThemedText>
+                </View>
+              </View>
+              <Feather name="chevron-right" size={24} color="#FFFFFF" />
             </Pressable>
-          </View>
+          </>
         }
         refreshControl={
           <RefreshControl
@@ -292,6 +314,21 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     justifyContent: "center",
     alignItems: "center",
+  },
+  aiPlannerCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.xl,
+  },
+  aiPlannerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  aiPlannerText: {
+    marginLeft: Spacing.md,
   },
   routeCard: {
     padding: Spacing.lg,
