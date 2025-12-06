@@ -10,8 +10,17 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { MapView, Marker } from "expo-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+let MapView: React.ComponentType<any> | null = null;
+let Marker: React.ComponentType<any> | null = null;
+
+if (Platform.OS !== "web") {
+  const ExpoMaps = require("expo-maps");
+  MapView = ExpoMaps.MapView;
+  Marker = ExpoMaps.Marker;
+}
+
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { ThemedView } from "@/components/ThemedView";
@@ -70,7 +79,7 @@ export default function AchievementsScreen() {
   const navigation = useNavigation();
   const { theme } = useTheme();
   const { isOnline } = useOffline();
-  const mapRef = useRef<MapView | null>(null);
+  const mapRef = useRef<any>(null);
 
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [visitedPlaces, setVisitedPlaces] = useState<VisitedPlace[]>([]);
@@ -221,9 +230,23 @@ export default function AchievementsScreen() {
       );
     }
 
+    if (!MapView || !Marker) {
+      return (
+        <View style={[styles.mapFallback, { backgroundColor: theme.backgroundSecondary }]}>
+          <Feather name="globe" size={48} color={theme.primary} />
+          <ThemedText type="h4" style={{ marginTop: Spacing.md, textAlign: "center" }}>
+            Map not available
+          </ThemedText>
+        </View>
+      );
+    }
+
+    const MapViewComponent = MapView;
+    const MarkerComponent = Marker;
+
     return (
       <View style={styles.mapContainer}>
-        <MapView
+        <MapViewComponent
           ref={mapRef}
           style={styles.map}
           initialCameraPosition={{
@@ -239,7 +262,7 @@ export default function AchievementsScreen() {
           pitchEnabled={false}
         >
           {validVisitedPlaces.map((visited) => (
-            <Marker
+            <MarkerComponent
               key={visited.id}
               coordinate={{
                 latitude: visited.place.latitude,
@@ -250,7 +273,7 @@ export default function AchievementsScreen() {
               color={theme.primary}
             />
           ))}
-        </MapView>
+        </MapViewComponent>
         <View style={[styles.mapOverlay, { backgroundColor: theme.overlay }]}>
           <View style={styles.mapStats}>
             <View style={styles.mapStatItem}>
