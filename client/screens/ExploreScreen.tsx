@@ -1,11 +1,23 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Platform } from "react-native";
-import { GoogleMaps, AppleMaps } from "expo-maps";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { Feather } from "@expo/vector-icons";
 import { Spacing } from "@/constants/theme";
+
+let GoogleMapsView: React.ComponentType<any> | null = null;
+let AppleMapsView: React.ComponentType<any> | null = null;
+
+if (Platform.OS !== "web") {
+  try {
+    const ExpoMaps = require("expo-maps");
+    GoogleMapsView = ExpoMaps.GoogleMaps?.View;
+    AppleMapsView = ExpoMaps.AppleMaps?.View;
+  } catch (e) {
+    console.log("expo-maps not available:", e);
+  }
+}
 
 export default function ExploreScreen() {
   const { theme } = useTheme();
@@ -14,7 +26,10 @@ export default function ExploreScreen() {
     longitude: 28.6428,
   });
 
-  if (Platform.OS === "web") {
+  const MapComponent = Platform.OS === "ios" ? AppleMapsView : GoogleMapsView;
+  const canShowMap = Platform.OS !== "web" && MapComponent !== null;
+
+  if (!canShowMap) {
     return (
       <ThemedView style={styles.container}>
         <View style={styles.placeholder}>
@@ -29,8 +44,6 @@ export default function ExploreScreen() {
       </ThemedView>
     );
   }
-
-  const MapComponent = Platform.OS === "ios" ? AppleMaps.View : GoogleMaps.View;
 
   return (
     <View style={styles.container}>
