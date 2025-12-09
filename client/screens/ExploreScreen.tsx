@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
   Pressable,
   ActivityIndicator,
   Platform,
-  Text,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -21,6 +20,19 @@ import { useOffline } from "@/hooks/useOffline";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { getPlacesWithOffline } from "@/lib/offline-api";
+
+let MapViewComponent: React.ComponentType<any> | null = null;
+let MarkerComponent: React.ComponentType<any> | null = null;
+
+if (Platform.OS !== "web") {
+  try {
+    const ExpoMaps = require("expo-maps");
+    MapViewComponent = ExpoMaps.MapView;
+    MarkerComponent = ExpoMaps.Marker;
+  } catch (e) {
+    console.log("expo-maps not available");
+  }
+}
 
 type Place = {
   id: string;
@@ -88,6 +100,10 @@ export default function ExploreScreen() {
     navigation.navigate("CreateRoute", {});
   };
 
+  const handleMarkerPress = (place: Place) => {
+    setSelectedPlace(place);
+  };
+
   if (isLoading) {
     return (
       <ThemedView style={styles.loadingContainer}>
@@ -96,71 +112,109 @@ export default function ExploreScreen() {
     );
   }
 
+  const defaultLocation = location 
+    ? { lat: location.lat, lng: location.lng }
+    : { lat: 41.0082, lng: 28.9784 };
+
+  const canShowMap = Platform.OS !== "web" && MapViewComponent && MarkerComponent;
+
   return (
     <ThemedView style={styles.container}>
-      <View style={[styles.mapPlaceholder, { backgroundColor: theme.backgroundDefault }]}>
-        <View style={styles.mapContent}>
-          <Feather name="map" size={64} color={theme.textSecondary} />
-          <ThemedText type="h3" style={styles.mapTitle}>
-            Explore Map
-          </ThemedText>
-          <ThemedText
-            type="body"
-            style={[styles.mapSubtitle, { color: theme.textSecondary }]}
-          >
-            {Platform.OS === "web"
-              ? "Map view is optimized for mobile. Use Expo Go to explore the full map experience."
-              : "Interactive map coming soon"}
-          </ThemedText>
-          
-          {location ? (
-            <View style={styles.locationInfo}>
-              <Feather name="navigation" size={16} color={theme.primary} />
-              <ThemedText type="small" style={{ color: theme.primary, marginLeft: Spacing.xs }}>
-                Location: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
-              </ThemedText>
-            </View>
-          ) : null}
-
-          <View style={styles.placesHeader}>
-            <ThemedText type="h4" style={styles.placesTitle}>
-              {places.length} Places Available
-            </ThemedText>
-            {isOfflineData ? <OfflineBadge /> : null}
-          </View>
-
-          <View style={styles.placesList}>
-            {places.slice(0, 5).map((place) => (
-              <Pressable
+      {canShowMap && MapViewComponent && MarkerComponent ? (
+        <MapViewComponent
+          style={styles.map}
+          initialCameraPosition={{
+            center: {
+              latitude: defaultLocation.lat,
+              longitude: defaultLocation.lng,
+            },
+            zoom: 12,
+          }}
+          uiSettings={{
+            zoomControlsEnabled: true,
+            compassEnabled: true,
+            myLocationButtonEnabled: hasLocationPermission,
+          }}
+          showsUserLocation={hasLocationPermission}
+        >
+          {places.map((place) => {
+            const MapMarker = MarkerComponent;
+            return (
+              <MapMarker
                 key={place.id}
-                style={({ pressed }) => [
-                  styles.placeItem,
-                  {
-                    backgroundColor: theme.backgroundSecondary,
-                    opacity: pressed ? 0.8 : 1,
-                    borderColor: selectedPlace?.id === place.id ? theme.primary : "transparent",
-                    borderWidth: 2,
-                  },
-                ]}
-                onPress={() => handlePlaceSelect(place)}
-              >
-                <Feather name="map-pin" size={16} color={theme.primary} />
-                <View style={styles.placeItemInfo}>
-                  <ThemedText type="small" numberOfLines={1}>
-                    {place.name}
-                  </ThemedText>
-                  <ThemedText
-                    type="caption"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    {place.city}, {place.country}
-                  </ThemedText>
-                </View>
-              </Pressable>
-            ))}
+                coordinate={{
+                  latitude: place.latitude,
+                  longitude: place.longitude,
+                }}
+                title={place.name}
+                onPress={() => handleMarkerPress(place)}
+              />
+            );
+          })}
+        </MapViewComponent>
+      ) : (
+        <View style={[styles.mapPlaceholder, { backgroundColor: theme.backgroundDefault }]}>
+          <View style={styles.mapContent}>
+            <Feather name="map" size={64} color={theme.textSecondary} />
+            <ThemedText type="h3" style={styles.mapTitle}>
+              Explore Map
+            </ThemedText>
+            <ThemedText
+              type="body"
+              style={[styles.mapSubtitle, { color: theme.textSecondary }]}
+            >
+              Map view is optimized for mobile. Use Expo Go or download the APK to explore the full map experience.
+            </ThemedText>
+            
+            {location ? (
+              <View style={styles.locationInfo}>
+                <Feather name="navigation" size={16} color={theme.primary} />
+                <ThemedText type="small" style={{ color: theme.primary, marginLeft: Spacing.xs }}>
+                  Location: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                </ThemedText>
+              </View>
+            ) : null}
+
+            <View style={styles.placesHeader}>
+              <ThemedText type="h4" style={styles.placesTitle}>
+                {places.length} Places Available
+              </ThemedText>
+              {isOfflineData ? <OfflineBadge /> : null}
+            </View>
+
+            <View style={styles.placesList}>
+              {places.slice(0, 5).map((place) => (
+                <Pressable
+                  key={place.id}
+                  style={({ pressed }) => [
+                    styles.placeItem,
+                    {
+                      backgroundColor: theme.backgroundSecondary,
+                      opacity: pressed ? 0.8 : 1,
+                      borderColor: selectedPlace?.id === place.id ? theme.primary : "transparent",
+                      borderWidth: 2,
+                    },
+                  ]}
+                  onPress={() => handlePlaceSelect(place)}
+                >
+                  <Feather name="map-pin" size={16} color={theme.primary} />
+                  <View style={styles.placeItemInfo}>
+                    <ThemedText type="small" numberOfLines={1}>
+                      {place.name}
+                    </ThemedText>
+                    <ThemedText
+                      type="caption"
+                      style={{ color: theme.textSecondary }}
+                    >
+                      {place.city}, {place.country}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
       {selectedPlace ? (
         <View
@@ -207,6 +261,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  map: {
+    flex: 1,
   },
   mapPlaceholder: {
     flex: 1,
