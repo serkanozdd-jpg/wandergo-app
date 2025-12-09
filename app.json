@@ -23,6 +23,11 @@
         "backgroundColor": "#00B4A0",
         "foregroundImage": "./assets/images/icon.png"
       },
+      "config": {
+        "googleMaps": {
+          "apiKey": "GOOGLE_MAPS_API_KEY_PLACEHOLDER"
+        }
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.wandergo.app",
@@ -69,6 +74,12 @@
         "expo-image-picker",
         {
           "photosPermission": "WanderGo needs photo library access to add photos to your reviews."
+        }
+      ],
+      [
+        "expo-maps",
+        {
+          "requestLocationPermission": true
         }
       ]
     ],
