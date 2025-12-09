@@ -11,22 +11,9 @@ import {
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-let MapView: React.ComponentType<any> | null = null;
-let Marker: React.ComponentType<any> | null = null;
-
-if (Platform.OS !== "web") {
-  try {
-    const RNMaps = require("react-native-maps");
-    MapView = RNMaps.default;
-    Marker = RNMaps.Marker;
-  } catch (e) {
-    console.log("react-native-maps not available");
-  }
-}
-
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
+import NativeMapView from "@/components/NativeMapView";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { Card } from "@/components/Card";
@@ -234,21 +221,20 @@ export default function AchievementsScreen() {
       );
     }
 
-    if (!MapView) {
-      return (
-        <View style={[styles.mapFallback, { backgroundColor: theme.backgroundSecondary }]}>
-          <Feather name="globe" size={48} color={theme.primary} />
-          <ThemedText type="h4" style={{ marginTop: Spacing.md, textAlign: "center" }}>
-            Map not available
-          </ThemedText>
-        </View>
-      );
-    }
+    const markers = validVisitedPlaces.map((visited) => ({
+      id: visited.id,
+      coordinate: {
+        latitude: visited.place.latitude,
+        longitude: visited.place.longitude,
+      },
+      title: visited.place.name,
+      description: `${visited.place.city}, ${visited.place.country}`,
+    }));
 
     return (
       <View style={styles.mapContainer}>
-        <MapView
-          ref={mapRef}
+        <NativeMapView
+          mapRef={mapRef}
           style={styles.map}
           initialRegion={{
             latitude: 20,
@@ -258,19 +244,8 @@ export default function AchievementsScreen() {
           }}
           rotateEnabled={false}
           pitchEnabled={false}
-        >
-          {Marker && validVisitedPlaces.map((visited) => (
-            <Marker
-              key={visited.id}
-              coordinate={{
-                latitude: visited.place.latitude,
-                longitude: visited.place.longitude,
-              }}
-              title={visited.place.name}
-              description={`${visited.place.city}, ${visited.place.country}`}
-            />
-          ))}
-        </MapView>
+          markers={markers}
+        />
         <View style={[styles.mapOverlay, { backgroundColor: theme.overlay }]}>
           <View style={styles.mapStats}>
             <View style={styles.mapStatItem}>

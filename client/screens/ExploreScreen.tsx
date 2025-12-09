@@ -5,19 +5,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { Feather } from "@expo/vector-icons";
 import { Spacing } from "@/constants/theme";
-
-let MapView: React.ComponentType<any> | null = null;
-let Marker: React.ComponentType<any> | null = null;
-
-if (Platform.OS !== "web") {
-  try {
-    const RNMaps = require("react-native-maps");
-    MapView = RNMaps.default;
-    Marker = RNMaps.Marker;
-  } catch (e) {
-    console.log("react-native-maps not available:", e);
-  }
-}
+import NativeMapView from "@/components/NativeMapView";
 
 export default function ExploreScreen() {
   const { theme } = useTheme();
@@ -26,9 +14,7 @@ export default function ExploreScreen() {
     longitude: 28.6428,
   });
 
-  const canShowMap = Platform.OS !== "web" && MapView !== null;
-
-  if (!canShowMap) {
+  if (Platform.OS === "web") {
     return (
       <ThemedView style={styles.container}>
         <View style={styles.placeholder}>
@@ -44,12 +30,9 @@ export default function ExploreScreen() {
     );
   }
 
-  const MapComponent = MapView!;
-  
   return (
     <View style={styles.container}>
-      <MapComponent
-        style={styles.map}
+      <NativeMapView
         initialRegion={{
           latitude: location.latitude,
           longitude: location.longitude,
@@ -58,23 +41,18 @@ export default function ExploreScreen() {
         }}
         showsUserLocation={true}
         showsMyLocationButton={true}
-      >
-        {Marker ? (
-          <Marker
-            coordinate={location}
-            title="Benim Konumum"
-          />
-        ) : null}
-      </MapComponent>
+        markers={[{
+          id: "current",
+          coordinate: location,
+          title: "Benim Konumum",
+        }]}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  map: {
     flex: 1,
   },
   placeholder: {
