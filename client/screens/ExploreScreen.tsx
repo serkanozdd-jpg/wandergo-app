@@ -6,16 +6,16 @@ import { useTheme } from "@/hooks/useTheme";
 import { Feather } from "@expo/vector-icons";
 import { Spacing } from "@/constants/theme";
 
-let GoogleMapsView: React.ComponentType<any> | null = null;
-let AppleMapsView: React.ComponentType<any> | null = null;
+let MapView: React.ComponentType<any> | null = null;
+let Marker: React.ComponentType<any> | null = null;
 
 if (Platform.OS !== "web") {
   try {
-    const ExpoMaps = require("expo-maps");
-    GoogleMapsView = ExpoMaps.GoogleMaps?.View;
-    AppleMapsView = ExpoMaps.AppleMaps?.View;
+    const RNMaps = require("react-native-maps");
+    MapView = RNMaps.default;
+    Marker = RNMaps.Marker;
   } catch (e) {
-    console.log("expo-maps not available:", e);
+    console.log("react-native-maps not available:", e);
   }
 }
 
@@ -26,8 +26,7 @@ export default function ExploreScreen() {
     longitude: 28.6428,
   });
 
-  const MapComponent = Platform.OS === "ios" ? AppleMapsView : GoogleMapsView;
-  const canShowMap = Platform.OS !== "web" && MapComponent !== null;
+  const canShowMap = Platform.OS !== "web" && MapView !== null;
 
   if (!canShowMap) {
     return (
@@ -45,33 +44,28 @@ export default function ExploreScreen() {
     );
   }
 
+  const MapComponent = MapView!;
+  
   return (
     <View style={styles.container}>
       <MapComponent
         style={styles.map}
-        cameraPosition={{
-          coordinates: {
-            latitude: location.latitude,
-            longitude: location.longitude,
-          },
-          zoom: 15,
+        initialRegion={{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
         }}
-        markers={[
-          {
-            id: "my-location",
-            coordinates: {
-              latitude: location.latitude,
-              longitude: location.longitude,
-            },
-            title: "Benim Konumum",
-          },
-        ]}
-        uiSettings={{
-          zoomControlsEnabled: true,
-          compassEnabled: true,
-          myLocationButtonEnabled: true,
-        }}
-      />
+        showsUserLocation={true}
+        showsMyLocationButton={true}
+      >
+        {Marker ? (
+          <Marker
+            coordinate={location}
+            title="Benim Konumum"
+          />
+        ) : null}
+      </MapComponent>
     </View>
   );
 }

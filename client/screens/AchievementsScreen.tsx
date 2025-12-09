@@ -12,16 +12,16 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-let GoogleMapsView: React.ComponentType<any> | null = null;
-let AppleMapsView: React.ComponentType<any> | null = null;
+let MapView: React.ComponentType<any> | null = null;
+let Marker: React.ComponentType<any> | null = null;
 
 if (Platform.OS !== "web") {
   try {
-    const ExpoMaps = require("expo-maps");
-    GoogleMapsView = ExpoMaps.GoogleMaps?.View;
-    AppleMapsView = ExpoMaps.AppleMaps?.View;
+    const RNMaps = require("react-native-maps");
+    MapView = RNMaps.default;
+    Marker = RNMaps.Marker;
   } catch (e) {
-    console.log("expo-maps not available");
+    console.log("react-native-maps not available");
   }
 }
 
@@ -234,9 +234,7 @@ export default function AchievementsScreen() {
       );
     }
 
-    const MapComponent = Platform.OS === "ios" ? AppleMapsView : GoogleMapsView;
-    
-    if (!MapComponent) {
+    if (!MapView) {
       return (
         <View style={[styles.mapFallback, { backgroundColor: theme.backgroundSecondary }]}>
           <Feather name="globe" size={48} color={theme.primary} />
@@ -249,30 +247,30 @@ export default function AchievementsScreen() {
 
     return (
       <View style={styles.mapContainer}>
-        <MapComponent
+        <MapView
           ref={mapRef}
           style={styles.map}
-          cameraPosition={{
-            coordinates: {
-              latitude: 20,
-              longitude: 0,
-            },
-            zoom: 1,
+          initialRegion={{
+            latitude: 20,
+            longitude: 0,
+            latitudeDelta: 100,
+            longitudeDelta: 100,
           }}
-          markers={validVisitedPlaces.map((visited) => ({
-            id: visited.id,
-            coordinates: {
-              latitude: visited.place.latitude,
-              longitude: visited.place.longitude,
-            },
-            title: visited.place.name,
-          }))}
-          uiSettings={{
-            compassEnabled: false,
-            rotateGesturesEnabled: false,
-            tiltGesturesEnabled: false,
-          }}
-        />
+          rotateEnabled={false}
+          pitchEnabled={false}
+        >
+          {Marker && validVisitedPlaces.map((visited) => (
+            <Marker
+              key={visited.id}
+              coordinate={{
+                latitude: visited.place.latitude,
+                longitude: visited.place.longitude,
+              }}
+              title={visited.place.name}
+              description={`${visited.place.city}, ${visited.place.country}`}
+            />
+          ))}
+        </MapView>
         <View style={[styles.mapOverlay, { backgroundColor: theme.overlay }]}>
           <View style={styles.mapStats}>
             <View style={styles.mapStatItem}>
