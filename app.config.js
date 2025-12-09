@@ -1,0 +1,99 @@
+export default {
+  expo: {
+    name: "WanderGo",
+    slug: "wandergo",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "wandergo",
+    userInterfaceStyle: "automatic",
+    newArchEnabled: true,
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "com.wandergo.app",
+      config: {
+        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+      },
+      infoPlist: {
+        NSLocationWhenInUseUsageDescription: "WanderGo needs your location to show nearby places and create routes for you.",
+        NSLocationAlwaysAndWhenInUseUsageDescription: "WanderGo needs your location to show nearby places and create routes for you.",
+        NSCameraUsageDescription: "WanderGo needs camera access to take photos for your reviews.",
+        NSPhotoLibraryUsageDescription: "WanderGo needs photo library access to add photos to your reviews."
+      }
+    },
+    android: {
+      adaptiveIcon: {
+        backgroundColor: "#00B4A0",
+        foregroundImage: "./assets/images/icon.png"
+      },
+      config: {
+        googleMaps: {
+          apiKey: process.env.GOOGLE_MAPS_API_KEY,
+        }
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+      package: "com.wandergo.app",
+      permissions: [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    web: {
+      output: "single",
+      favicon: "./assets/images/icon.png"
+    },
+    plugins: [
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/images/splash-icon.png",
+          imageWidth: 200,
+          resizeMode: "contain",
+          backgroundColor: "#00B4A0",
+          dark: {
+            backgroundColor: "#1A1D1F"
+          }
+        }
+      ],
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          locationAlwaysAndWhenInUsePermission: "WanderGo needs your location to show nearby places and create routes for you."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          cameraPermission: "WanderGo needs camera access to take photos for your reviews."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          photosPermission: "WanderGo needs photo library access to add photos to your reviews."
+        }
+      ],
+      [
+        "expo-maps",
+        {
+          requestLocationPermission: true
+        }
+      ]
+    ],
+    experiments: {
+      reactCompiler: true
+    },
+    extra: {
+      eas: {
+        projectId: "19633e1e-ed5d-47c8-8f17-09c4148d28c3"
+      }
+    },
+    owner: "serkan1907"
+  }
+};
