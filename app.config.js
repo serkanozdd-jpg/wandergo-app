@@ -78,12 +78,6 @@ export default {
         {
           photosPermission: "WanderGo needs photo library access to add photos to your reviews."
         }
-      ],
-      [
-        "expo-maps",
-        {
-          requestLocationPermission: true
-        }
       ]
     ],
     experiments: {
