@@ -10,7 +10,7 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "wandergo.replit.app"
+        "EXPO_PUBLIC_DOMAIN": "https://wander-go--serkanozz.replit.app"
       }
     },
     "production": {
@@ -18,7 +18,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "wandergo.replit.app"
+        "EXPO_PUBLIC_DOMAIN": "https://wander-go--serkanozz.replit.app"
       }
     }
   },
